@@ -5,7 +5,7 @@ Plugin URI: http://SpectrOMtech.com/products/spectrom-db-cleanup/
 Description: Removes unnecessary data and optimizes your database tables to ensuring site stability and performance.
 Author: SpectrOMtech.com
 Author URI: http://SpectrOMtech.com
-Version: 1.0.0
+Version: 1.0.1
 Copyright: Copyright (c) 2014-2015 SpectrOMtech.com. All Rights Reserved.
 Text Domain: spectrom-dbcleanup
 Domain path: /languages
@@ -37,9 +37,12 @@ class SpectrOMDBCleanup
 	{
 		add_filter('cron_schedules', array(&$this, 'cron_add_schedule')); // make sure this is on top
 		add_action('init', array(&$this, 'init'));
-		add_action('plugins_loaded', array(&$this, 'load_textdomain'));
 
-		// You can't call register_activation_hook() inside a function hooked to the 'plugins_loaded' or 'init' hooks
+		// small optimization: only load translations on admin page requests
+		if (is_admin())
+			add_action('plugins_loaded', array(&$this, 'load_textdomain'));
+
+		// you can't call register_activation_hook() inside a function hooked to the 'plugins_loaded' or 'init' hooks
 		register_activation_hook(__FILE__, array(&$this, 'activate'));
 		register_deactivation_hook(__FILE__, array(&$this, 'deactivate'));
 
@@ -57,7 +60,7 @@ class SpectrOMDBCleanup
 	{
 		if (NULL === self::$_instance)
 			self::$_instance = new self();
-		return (self::$_instance);
+		return self::$_instance;
 	}
 
 	/*
@@ -112,7 +115,7 @@ class SpectrOMDBCleanup
 	public function cron_add_schedule($schedules)
 	{
 		$schedules['spectrom_dbcleanup_schedule'] = $this->get_cron_schedule();
-		return ($schedules);
+		return $schedules;
 	}
 
 	/**
@@ -125,7 +128,7 @@ class SpectrOMDBCleanup
 			'interval' => $this->get_option('interval'),
 			'display' => __('SpectrOM DB Cleanup Cron Schedule', 'spectrom-dbcleanup')
 		);
-		return ($schedule);
+		return $schedule;
 	}
 
 	/**
@@ -152,7 +155,7 @@ class SpectrOMDBCleanup
 	{
 		if (NULL === $this->_settings)
 			$this->_settings = get_option(self::SETTINGS_NAME, array());
-		return ($this->_settings);
+		return $this->_settings;
 	}
 
 	/**
@@ -167,9 +170,9 @@ class SpectrOMDBCleanup
 			$this->_settings = get_option(self::SETTINGS_NAME, array());
 
 		if (isset($this->_settings[$name]))
-			return ($this->_settings[$name]);
+			return $this->_settings[$name];
 
-		return ($default);
+		return $default;
 	}
 
 	/**
@@ -181,7 +184,7 @@ class SpectrOMDBCleanup
 	public static function calculate_interval($frequency, $time)
 	{
 		$interval = ($frequency * DAY_IN_SECONDS) + ($time * HOUR_IN_SECONDS);
-		return (intval($interval));
+		return intval($interval);
 	}
 
 	/**

@@ -30,7 +30,7 @@ class SpectrOMDBCleanupDeactivate
 			$plugin = SpectrOMDBCleanup::get_instance();
 			self::$_instance = new self($plugin);
 		}
-		return (self::$_instance);
+		return self::$_instance;
 	}
 
 	/**

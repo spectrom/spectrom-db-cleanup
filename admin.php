@@ -10,6 +10,9 @@ class SpectrOMDBCleanupAdmin
 	private static $_instance = NULL;
 	private $_plugin = NULL;
 
+	const SETTINGS_SECTION = 'spectrom_dbcleanup_section';
+	const SETTINGS_GROUP = 'spectrom_dbcleanup_setting_group';
+
 	/**
 	 * class contructor, setup all actions and filters
 	 */
@@ -30,7 +33,7 @@ class SpectrOMDBCleanupAdmin
 			$plugin = SpectrOMDBCleanup::get_instance();
 			self::$_instance = new self($plugin);
 		}
-		return (self::$_instance);
+		return self::$_instance;
 	}
 
 	/**
@@ -38,8 +41,8 @@ class SpectrOMDBCleanupAdmin
 	 */
 	public function admin_menu()
 	{
-		if (!current_user_can('manage_options'))
-			wp_die(__('You do not have sufficient permissions to access this page.', 'spectrom-dbcleanup'));
+//		if (!current_user_can('manage_options'))	// moved to settings_page()
+//			wp_die(__('You do not have sufficient permissions to access this page.', 'spectrom-dbcleanup'));
 
 		add_options_page(__('SpectrOM DB Cleanup', 'spectrom-dbcleanup'),
 			__('SpectrOM DB Cleanup', 'spectrom-dbcleanup'),
@@ -52,60 +55,60 @@ class SpectrOMDBCleanupAdmin
 	 */
 	public function admin_init()
 	{
-		register_setting('settings-group', SpectrOMDBCleanup::SETTINGS_NAME, array(&$this, 'settings_validate'));
+		register_setting(self::SETTINGS_GROUP, SpectrOMDBCleanup::SETTINGS_NAME, array(&$this, 'settings_validate'));
 
 		$plugin = $this->_plugin;
 
-		add_settings_section('settings-section', '',
+		add_settings_section(self::SETTINGS_SECTION, '',
 			array(&$this, 'settings_section_callback'), 'spectrom-dbcleanup');
 
 		add_settings_field('frequency', __('Frequency of Cleanup:', 'spectrom-dbcleanup'),
-			array(&$this, 'dropdown_options_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'dropdown_options_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 			array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[frequency]',
 				'value' => $plugin->get_option('frequency', 2), 'options' => $this->_get_setting_frequencies()));
 
 		add_settings_field('time', __('Time of Day:', 'spectrom-dbcleanup'),
-			array(&$this, 'dropdown_options_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'dropdown_options_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 			array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[time]',
 				'value' => $plugin->get_option('time', 1), 'options' => $this->_get_setting_times()));
 
 		add_settings_field('emails', __('Emails to Send Reports To:', 'spectrom-dbcleanup'),
-			array(&$this, 'emails_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'emails_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 			array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[emails]',
 				'value' => $plugin->get_option('emails', get_option('admin_email'))));
 
 		add_settings_field('remove_posts', __('Remove Posts marked as Trash:', 'spectrom-dbcleanup'),
-			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 			array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[remove_posts]',
-				'message' => __('When enabled, will remove posts marked as trash and their associated postmeta data', 'spectrom-dbcleanup'),
+				'message' => __('When enabled, will remove Posts, Pages, etc. marked as <strong>Trash</strong>, as well as their associated postmeta data.', 'spectrom-dbcleanup'),
 				'value' => $plugin->get_option('remove_posts', '0')));
 
 		add_settings_field('remove_comments', __('Remove Comments marked as Trash:', 'spectrom-dbcleanup'),
-			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 			array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[remove_comments]',
-				'message' => __('When enabled, will remove any comments marked as Trash', 'spectrom-dbcleanup'),
+				'message' => __('When enabled, will remove any comments marked as <strong>Trash</strong>.', 'spectrom-dbcleanup'),
 				'value' => $plugin->get_option('remove_comments', '0')));
 
 		add_settings_field('remove_usermeta', __('Remove Orphaned Usermeta:', 'spectrom-dbcleanup'),
-			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 			array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[remove_usermeta]',
-				'message' => __('When enabled, will remove Usermeta records that do not have a valid user id', 'spectrom-dbcleanup'),
+				'message' => __('When enabled, will remove Usermeta records that do not have a valid user id.', 'spectrom-dbcleanup'),
 				'value' => $plugin->get_option('remove_usermeta', '0')));
 
 		add_settings_field('remove_expired_transients', __('Remove expired Transient Data:', 'spectrom-dbcleanup'),
-			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'radio_yn_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 			array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[remove_expired_transients]',
-				'message' => __('When enabled, will remove expired Transient data.', 'spectrom-dbcleanup'),
+				'message' => __('When enabled, will remove <em>expired</em> Transient data, leaving non-expired/current data.', 'spectrom-dbcleanup'),
 				'value' => $plugin->get_option('remove_expired_transients', '0')));
 
 		add_settings_field('plain_emails', __('Send Emails in plain text:', 'spectrom-dbcleanup'),
-			array(&$this, 'checkbox_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'checkbox_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 				array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[plain_emails]',
 					'message' => __('If checked, emails will be sent as plain text rather than in HTML format.', 'spectrom-dbcleanup'),
 					'value' => $plugin->get_option('plain_emails', '0')));
 
 		add_settings_field('remove_settings', __('Plugin Uninstallation', 'spectrom-dbcleanup'),
-			array(&$this, 'checkbox_callback'), 'spectrom-dbcleanup', 'settings-section',
+			array(&$this, 'checkbox_callback'), 'spectrom-dbcleanup', self::SETTINGS_SECTION,
 				array('name' => SpectrOMDBCleanup::SETTINGS_NAME.'[remove_settings]',
 					'message' => __('Remove all stored settings when plugin is uninstalled.', 'spectrom-dbcleanup'),
 					'value' => $plugin->get_option('remove_settings', '0')));
@@ -142,9 +145,9 @@ class SpectrOMDBCleanupAdmin
 	 */
 	public function emails_callback($args)
 	{
-		echo '<textarea name="', $args['name'], '" rows="4" cols="50">', esc_html($args['value']), '</textarea>',
+		echo '<textarea name="', $args['name'], '" rows="4" cols="80">', esc_html($args['value']), '</textarea>',
 			'<br />', '<label>',
-			esc_html(__('List of email addresses to send notifications to, separated by commas.', 'spectrom-dbcleanup')), '</label>';
+			esc_html(__('List of email addresses to send notifications and reports to, separated by commas.', 'spectrom-dbcleanup')), '</label>';
 	}
 
 	/**
@@ -183,6 +186,10 @@ class SpectrOMDBCleanupAdmin
 	 */
 	public function settings_page()
 	{
+		// check permissions only when we know we're running on our settings page
+		if (!current_user_can('manage_options'))
+			wp_die(__('You do not have sufficient permissions to access this page.', 'spectrom-dbcleanup'));
+
 		wp_enqueue_style('spectrom-admin', $this->_plugin->_plugin_uri . 'assets/css/spectrom-admin.css',
 			array(), SpectrOMDBCleanup::PLUGIN_VERSION);
 
@@ -199,7 +206,7 @@ class SpectrOMDBCleanupAdmin
 		echo '<div class="wrap">';
 		echo	'<h2>', sprintf(__('SpectrOM DB Cleanup v%1$s Settings', 'spectrom-dbcleanup'), SpectrOMDBCleanup::PLUGIN_VERSION), '</h2>';
 		echo	'<form action="options.php" method="POST">';
-		settings_fields('settings-group');
+		settings_fields(self::SETTINGS_GROUP);
 		do_settings_sections('spectrom-dbcleanup');
 		submit_button();
 		echo	'</form>';
@@ -259,7 +266,7 @@ class SpectrOMDBCleanupAdmin
 		if (0 === count($email_list))
 			add_settings_error(SpectrOMDBCleanup::SETTINGS_NAME, 'invalid-email', __('To receive Reports, you need to enter at least one email address.', 'spectrom-dbcleanup'));
 
-		return ($valid);
+		return $valid;
 	}
 
 	/**
@@ -276,7 +283,7 @@ class SpectrOMDBCleanupAdmin
 			7 => __('Every Seven Days', 'spectrom-dbcleanup'),
 			14 => __('Every Fourteen Days', 'spectrom-dbcleanup'),
 		);
-		return ($setting);
+		return $setting;
 	}
 
 	/**
@@ -288,7 +295,7 @@ class SpectrOMDBCleanupAdmin
 		$setting = array();
 		for ($i = 0; $i < 24; $i++)
 			$setting[$i] = date('g:00 a', strtotime(sprintf('%02d:00', $i)));
-		return ($setting);
+		return $setting;
 	}
 }
 

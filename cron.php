@@ -47,7 +47,7 @@ class SpectrOMDBCleanupCron
 			$plugin = SpectrOMDBCleanup::get_instance();
 			self::$_instance = new self($plugin);
 		}
-		return (self::$_instance);
+		return self::$_instance;
 	}
 
 	/**
@@ -175,7 +175,7 @@ class SpectrOMDBCleanupCron
 	 */
 	public static function html_content_type($content_type)
 	{
-		return ('text/html; charset=iso-8859-1');
+		return 'text/html; charset=iso-8859-1';
 	}
 
 	/**
@@ -216,6 +216,7 @@ class SpectrOMDBCleanupCron
 			if (is_array($rows)) {
 				foreach ($rows as $row) {
 					// Note, performing an OPTIMIZE TABLE on InnoDB type tables will result in the following message returned from the MySQL server: “Table does not support optimize, doing recreate + analyze instead”. This error is not to be reported to the user in the summary email sent below. Any other error messages are to be reported.
+					// TODO: use a string search for 'does not support' so it's more forgiving, in case the returned message changes
 					if ('Table does not support optimize, doing recreate + analyze instead' === $row->Msg_text)
 						continue;
 					$this->_table_results[$table_name][] = strtoupper($row->Msg_type) . ': ' . $row->Msg_text;
@@ -431,7 +432,7 @@ class SpectrOMDBCleanupCron
 			'comments_time' => ($end_comments - $end_posts),
 			'options_time' => ($end_options - $end_comments),
 		);
-		return ($ret);
+		return $ret;
 	}
 
 	// some helper functions for runnning the optimization operations
@@ -445,7 +446,7 @@ class SpectrOMDBCleanupCron
 	{
 		$sql = 'SELECT COUNT(*) AS `cnt`
 				FROM `' . $table . '`';
-		return (intval($this->wpdb->get_var($sql)));
+		return intval($this->wpdb->get_var($sql));
 	}
 
 	/**
@@ -457,9 +458,9 @@ class SpectrOMDBCleanupCron
 	{
 		foreach ($this->table_data as $idx => $data) {
 			if ($data['Name'] === $table)
-				return ($data);
+				return $data;
 		}
-		return (NULL);
+		return NULL;
 /*
  * Name
  * Engine
