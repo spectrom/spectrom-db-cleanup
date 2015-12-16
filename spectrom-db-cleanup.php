@@ -2,7 +2,7 @@
 /*
 Plugin Name: SpectrOM Database Cleanup
 Plugin URI: http://SpectrOMtech.com/products/spectrom-db-cleanup/
-Description: Removes unnecessary data and optimizes your database tables to ensuring site stability and performance.
+Description: Removes unnecessary data and optimizes your database tables to ensure site stability and performance.
 Author: SpectrOMtech.com
 Author URI: http://SpectrOMtech.com
 Version: 1.0.1
